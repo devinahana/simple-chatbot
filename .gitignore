@@ -1,5 +1,4 @@
-.venv
+backend/.venv
+backend/__pycache__/
 frontend/node_modules
-static
-__pycache__/
 .DS_Store

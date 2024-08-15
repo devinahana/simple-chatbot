@@ -1,24 +1,12 @@
 export type AskResponse = {
     answer: string;
-    // citations: Citation[];
     error?: string;
 };
 
-export type Citation = {
-    content: string;
+export type ChatHistory = {
     id: string;
-    title: string | null;
-    filepath: string | null;
-    url: string | null;
-    metadata: string | null;
-    chunk_id: string | null;
-    reindex_id: string | null;
-}
-
-export type ToolMessageContent = {
-    citations: Citation[];
-    intent: string;
-}
+    title?: string;
+};
 
 export type ChatMessage = {
     role: string;

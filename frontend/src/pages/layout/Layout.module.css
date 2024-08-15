@@ -10,7 +10,7 @@
 
 .headerContainer {
     display: flex;
-    justify-content: left;
+    justify-content: space-between;
     align-items: center;
 }
 
@@ -19,6 +19,7 @@
     align-items: center;
     margin-left: 14px;
     text-decoration: none;
+    cursor: pointer;
 }
 
 .headerTitle {
@@ -37,30 +38,31 @@
     margin-left: 36px;
 }
 
-.shareButtonContainer {
+.buttonsContainer {
     display: flex;
-    flex-direction: row;
-    justify-content: center;
+    align-items: center;
+    padding-right: 36px;
+}
+
+
+.historyButtonContainer {
+    display: flex;
     align-items: center;
     padding: 5px 12px;
     gap: 4px;
     width: 86px;
     height: 32px;
-    background: radial-gradient(109.81% 107.82% at 100.1% 90.19%, #D6484C 33.63%, #EED7D8 100%) /* warning: gradient uses a rotation that is not supported by CSS and may not behave as expected */;
+    background: radial-gradient(109.81% 107.82% at 100.1% 90.19%, #D6484C 33.63%, #EED7D8 100%);
     border-radius: 4px;
-    flex: none;
-    order: 1;
-    flex-grow: 0;
-    position: absolute;
-    right: 20px;
     cursor: pointer;
+    margin-right: 10px; /* Add spacing between the buttons */
 }
 
-.shareButton {
+.historyButton {
     color: #FFFFFF;
 }
 
-.shareButtonText {
+.historyButtonText {
     font-style: normal;
     font-weight: 600;
     font-size: 14px;
@@ -80,34 +82,16 @@
     border-radius: 4px;
 }
 
-.copyButtonContainer {
-    box-sizing: border-box;
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-    align-items: center;
-    padding: 5px 12px;
-    gap: 4px;
-    background: #FFFFFF;
-    border: 1px solid #D1D1D1;
-    border-radius: 4px;
-}
-
-.copyButtonContainer:hover {
-    cursor: pointer;
-    background: #D1D1D1;
-}
-
-.copyButton {
-    color: #424242;
-}
-
-.copyButtonText {
-    font-style: normal;
-    font-weight: 600;
+.loadingText {
+    margin-top: 10px;
     font-size: 14px;
-    line-height: 20px;
+    color: #000;
+}
+
+.loadingContainer {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    color: #242424;
+    justify-content: center;
+    height: 100%;
 }
