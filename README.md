@@ -33,5 +33,7 @@
     npm run dev
     ```
 
+[Checkout the demo video](https://drive.google.com/file/d/1BK4CQRK5rxXvGMft_E2AaStGnc9JWMp_/view?usp=sharing)
+
 ## References
 https://github.com/Azure-Samples/azure-search-openai-demo
