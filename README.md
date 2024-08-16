@@ -21,8 +21,8 @@
     pip install -r requirements.txt
     ```
 
-3.  **Configure the token**
-    You'll need to obtain an OpenAI API key and configure it in the **.env** for the app to function properly
+3.  **Configure the token**<br>
+    You'll need to obtain an OpenAI API key and configure it in the **backend/.env** for the app to function properly
     ```properties
     API_KEY=<<YOUR_OPENAI_API_KEY>>
     ```
@@ -42,4 +42,4 @@
 [Checkout the demo video](https://drive.google.com/file/d/1BK4CQRK5rxXvGMft_E2AaStGnc9JWMp_/view?usp=sharing)
 
 ## References
-https://github.com/Azure-Samples/azure-search-openai-demo
+https://github.com/microsoft/sample-app-aoai-chatGPT
