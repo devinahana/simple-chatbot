@@ -21,12 +21,18 @@
     pip install -r requirements.txt
     ```
 
-3. **Run backend**
+3.  **Configure the token**
+    You'll need to obtain an OpenAI API key and configure it in the **.env** for the app to function properly
+    ```properties
+    API_KEY=<<YOUR_OPENAI_API_KEY>>
+    ```
+
+4. **Run backend**
     ```bash
     flask run
     ```
 
-4. **Run frontend**
+5. **Run frontend**
     ```bash
     cd frontend
     npm install
