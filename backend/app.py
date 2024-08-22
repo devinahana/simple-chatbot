@@ -13,11 +13,11 @@ load_dotenv()
 
 def db_conn():
     conn = psycopg2.connect(
-        dbname="postgres",
-        user="admin",
-        password="12345678",
-        host="34.45.220.223",
-        port="15001"
+        dbname=os.environ.get("DB_NAME"),
+        user=os.environ.get("DB_USERNAME"),
+        password=os.environ.get("DB_PASSWORD"),
+        host=os.environ.get("DB_HOST"),
+        port=os.environ.get("DB_PORT")
     )
     return conn
 
@@ -79,11 +79,6 @@ def histories():
                 return jsonify({"histories": histories_list}), 200
     except Exception as e:
         return jsonify({"error": "Error retrieving histories. " + str(e)}), 500
-    
-
-@app.route("/test")
-def test():
-    return {"test": "Test"}
 
 @app.route("/conversation", methods=["POST"])
 def conversation():
@@ -98,14 +93,14 @@ def conversation():
     messages = [
             {
                 "role": "system", 
-                "content": "You are a helpful assistant."
+                "content": "You are a helpful assistant that helps computer science students do their assignments."
             }
         ]
     messages.extend(data['messages'])
     
     client = OpenAI(api_key=api_key)
     completion = client.chat.completions.create(
-        model="gpt-3.5-turbo",
+        model="gpt-4",
         messages=messages
     )
 
