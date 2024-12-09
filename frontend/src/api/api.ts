@@ -31,7 +31,7 @@ export async function historyApi(id: string): Promise<any> {
         const responseData = await response.json();
 
         if (response.ok) {
-            return responseData.messages;
+            return responseData;
         }
     } catch (error: any) {
         throw new Error(error.message);
@@ -69,6 +69,34 @@ export async function saveChatApi(options: { messages: ChatMessage[]; title: str
             messages: options.messages,
             title: options.title
         })
+    });
+
+    if (!response.ok) {
+        const errorResponse = await response.json();
+        throw new Error(errorResponse.error || 'An error occurred');
+    }
+
+    const responseData = await response.json();
+    return responseData;
+}
+
+export async function updateChatApi(id: string, options: { messages: ChatMessage[]; title?: string }): Promise<any> {
+    const bodyData: any = {
+        messages: options.messages,
+    };
+
+    // Include title only if it is provided
+    if (options.title && options.title.trim() !== '') {
+        bodyData.title = options.title;
+    }
+
+    const response = await fetch(BASE_URL + "/update-history/" + id, {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": "*",
+        },
+        body: JSON.stringify(bodyData)
     });
 
     if (!response.ok) {

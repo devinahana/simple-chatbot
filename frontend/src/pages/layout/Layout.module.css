@@ -12,6 +12,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    position: relative;
 }
 
 .headerTitleContainer {
@@ -94,4 +95,19 @@
     align-items: center;
     justify-content: center;
     height: 100%;
+}
+
+.middleTextContainer {
+    position: absolute; /* Overlay on the header */
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    z-index: 1; /* Ensure it appears above other elements */
+}
+
+.middleText {
+    font-size: 18px;
+    font-weight: bold;
+    color: #000; /* Adjust the color for visibility */
 }

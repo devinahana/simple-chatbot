@@ -3,7 +3,7 @@ import { DefaultButton, Dialog, DialogFooter, PrimaryButton, Stack, TextField } 
 import { BroomRegular, SquareRegular, ErrorCircleRegular, SaveRegular } from "@fluentui/react-icons";
 import { ClipLoader } from 'react-spinners';
 import styles from "./Chat.module.css";
-import TelkomIcon from "../../assets/telkom-icon.png";
+import BotIcon from "../../assets/bot-icon.png";
 
 import {
     ChatMessage,
@@ -11,17 +11,21 @@ import {
     conversationApi,
     ChatResponse,
     historyApi,
-    saveChatApi
+    saveChatApi,
+    updateChatApi
 } from "../../api";
 import { Answer } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
 
-const Chat = () => {
+interface ChatProps {
+    setTitle: React.Dispatch<React.SetStateAction<string>>;
+}
+
+const Chat: React.FC<ChatProps> = ({ setTitle }) => {
     const queryParameters = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
     const id = queryParameters?.get("id") as string;
     const [isLoadingInitial, setIsLoadingInitial] = useState<boolean>(true);
     const [isSharePanelOpen, setIsSharePanelOpen] = useState<boolean>(false);
-    const [title, setTitle] = useState('');
     const lastQuestionRef = useRef<string>("");
     const chatMessageStreamEnd = useRef<HTMLDivElement | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -34,7 +38,8 @@ const Chat = () => {
             try {
                 const data = await historyApi(id);
                 if (data) {
-                    setAnswers(data);
+                    setAnswers(data.messages);
+                    setTitle(data.title);
                 } else {
                     setAnswers([]);
                 }
@@ -126,12 +131,22 @@ const Chat = () => {
 
     const saveChat = async (title: string) => {
         try {
-            const response = await saveChatApi(
-                {
-                    messages: answers, // Use the current state as the messages
-                    title: title
-                }
-            );
+            if (id) {
+                const response = await updateChatApi(
+                    id,
+                    {
+                        messages: answers, // Use the current state as the messages
+                        title: title
+                    }
+                );
+            } else {
+                const response = await saveChatApi(
+                    {
+                        messages: answers, // Use the current state as the messages
+                        title: title
+                    }
+                );
+            }
         } catch (error) {
             console.error('Error saving chat:', error);
         }
@@ -154,11 +169,11 @@ const Chat = () => {
 
     const textFieldRef = createRef<HTMLInputElement>();
     const handleSaveClick = () => {
-        const title = textFieldRef.current?.value || ''; 
+        const title = textFieldRef.current?.value || '';
         saveChat(title);
         handlePanelDismiss();
-      };
-    
+    };
+
 
     const handlePanelDismiss = () => {
         setIsSharePanelOpen(false);
@@ -180,7 +195,7 @@ const Chat = () => {
                             {!lastQuestionRef.current && answers.length === 0 ? (
                                 <Stack className={styles.chatEmptyState}>
                                     <img
-                                        src={TelkomIcon}
+                                        src={BotIcon}
                                         className={styles.chatIcon}
                                         aria-hidden="true"
                                     />

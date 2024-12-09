@@ -1,6 +1,6 @@
 import { Outlet, Link } from "react-router-dom";
 import styles from "./Layout.module.css";
-import TelkomIcon from "../../assets/telkom-icon.png";
+import BotIcon from "../../assets/bot-icon.png";
 import { History32Regular } from "@fluentui/react-icons";
 import { Dialog, Stack, Link as FluentLink, Text } from "@fluentui/react";
 import { useState } from "react";
@@ -9,7 +9,11 @@ import { historyListApi } from "../../api";
 import { useNavigate } from 'react-router-dom';
 import { ClipLoader } from 'react-spinners';
 
-const Layout = () => {
+interface LayoutProps {
+    title: string;
+}
+
+const Layout: React.FC<LayoutProps> = ({ title }) => {
     const navigate = useNavigate();
     const [isSharePanelOpen, setIsSharePanelOpen] = useState<boolean>(false);
     const [chatHistory, setChatHistory] = useState<ChatHistory[]>([]);
@@ -17,7 +21,7 @@ const Layout = () => {
 
     const handleClick = () => {
         window.location.href = '/';
-      };
+    };
 
     const fetchHistoryList = async () => {
         setIsLoadingHistory(true)
@@ -56,13 +60,16 @@ const Layout = () => {
                 <div className={styles.headerContainer}>
                     <div onClick={handleClick} className={styles.headerTitleContainer}>
                         <img
-                            src={TelkomIcon}
+                            src={BotIcon}
                             className={styles.headerIcon}
                             aria-hidden="true"
                         />
                         <div className={styles.headerTitleContainer}>
-                            <h1 className={styles.headerTitle}>Telkom Chatbot</h1>
+                            <h1 className={styles.headerTitle}>Chatbot</h1>
                         </div>
+                    </div>
+                    <div className={styles.middleTextContainer}>
+                        <span className={styles.middleText}>{title}</span>
                     </div>
                     <div className={styles.buttonsContainer}>
                         <div
