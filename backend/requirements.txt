@@ -3,3 +3,6 @@ python-dotenv
 flask_cors
 openai
 psycopg2-binary
+pytz
+flasgger
+flask-restful
