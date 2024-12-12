@@ -39,7 +39,12 @@
     npm run dev
     ```
 
-[Checkout the demo video](https://drive.google.com/file/d/1BK4CQRK5rxXvGMft_E2AaStGnc9JWMp_/view?usp=sharing)
+[Checkout the getting started demo video](https://drive.google.com/file/d/1BK4CQRK5rxXvGMft_E2AaStGnc9JWMp_/view?usp=sharing)
+
+
+## Backend Documentation
+[Swagger Documentation](http://127.0.0.1:5000/apidocs/)
+
 
 ## References
 https://github.com/microsoft/sample-app-aoai-chatGPT
