@@ -119,6 +119,16 @@ def create_history():
     "summary": "Update Chat History",
     "parameters": [
         {
+            "name": "id",
+            "in": "path",
+            "required": True,
+            "description": "The ID of the chat history to update",
+            "schema": {
+                "type": "integer",
+                "example": 1
+            }
+        },
+        {
             "name": "body",
             "in": "body",
             "required": True,
@@ -226,6 +236,71 @@ def update_history(id):
 
 
 @app.route("/history/<int:id>", methods=["GET"])
+@swag_from({
+    "tags": ["History"],
+    "summary": "Get Chat History by Id",
+    "parameters": [
+        {
+            "name": "id",
+            "in": "path",
+            "required": True,
+            "description": "The ID of the chat history to retrieve",
+            "schema": {
+                "type": "integer",
+                "example": 1
+            }
+        }
+    ],
+    "responses": {
+        "200": {
+            "description": "Success",
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "title": {"type": "string"},
+                    "messages": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "role": {"type": "string"},
+                                "content": {"type": "string"}
+                            }
+                        }
+                    },
+                    "created_at": {"type": "string", "format": "date-time"},
+                    "updated_at": {"type": "string", "format": "date-time"},
+                    "deleted_at": {"type": "string", "format": "date-time"}
+                }
+            }
+        },
+        "404": {
+            "description": "Not Found",
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "message": {"type": "string"}
+                },
+                "example": {
+                    "message": "Chat history with ID 123 not found"
+                }
+            }
+        },
+        "500": {
+            "description": "Internal Server Error",
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "error": {"type": "string"}
+                },
+                "example": {
+                    "error": "Error retrieving chat history. "
+                }
+            }
+        
+        }
+    }
+})
 def history(id):
     connection = db_conn()
     try:
@@ -249,9 +324,66 @@ def history(id):
                     "deleted_at": convert_to_local(history_data[3]) if history_data[3] else None
                 }), 200
     except Exception as e:
-        return jsonify({"error": "Error retrieving messages. " + str(e)}), 500
+        return jsonify({"error": "Error retrieving chat history. " + str(e)}), 500
     
 @app.route("/delete-history/<int:id>", methods=["DELETE"])
+@swag_from({
+    "tags": ["History"],
+    "summary": "Delete Chat History",
+    "parameters": [
+        {
+            "name": "id",
+            "in": "path",
+            "required": True,
+            "description": "The ID of the chat history to delete",
+            "schema": {
+                "type": "integer",
+                "example": 1
+            }
+        }
+    ],
+    "responses": {
+        "200": {
+            "description": "Success",
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "history_id": {"type": "integer"},
+                    "message": {"type": "string"}
+                },
+                "example": {
+                    "history_id": 123,
+                    "message": "Chat history is deleted successfully"
+                }
+            }
+        },
+        "404": {
+            "description": "Not Found",
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "message": {"type": "string"}
+                },
+                "example": {
+                    "message": "Chat history with ID 123 not found"
+                }
+            }
+        },
+        "500": {
+            "description": "Internal Server Error",
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "error": {"type": "string"}
+                },
+                "example": {
+                    "error": "Error deleting chat history. "
+                }
+            }
+        
+        }
+    }
+})
 def delete_history(id):
     connection = db_conn()
     try:
@@ -266,11 +398,50 @@ def delete_history(id):
 
                 cursor.execute("UPDATE history SET deleted_at=CURRENT_TIMESTAMP WHERE id = %s", (id,))
                 
-                return jsonify({"message": "History is deleted successfully", "history_id": id}), 200
+                return jsonify({"message": "Chat history is deleted successfully", "history_id": id}), 200
     except Exception as e:
         return jsonify({"error": "Error deleting chat history. " + str(e)}), 500
 
 @app.route("/histories", methods=["GET"])
+@swag_from({
+    "tags": ["History"],
+    "summary": "Get All Chat History",
+    "responses": {
+        "200": {
+            "description": "Success",
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "histories": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "id": {"type": "integer"},
+                                "title": {"type": "string"},
+                                "created_at": {"type": "string", "format": "date-time"},
+                                "updated_at": {"type": "string", "format": "date-time"},
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "500": {
+            "description": "Internal Server Error",
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "error": {"type": "string"}
+                },
+                "example": {
+                    "error": "Error retrieving chat histories. "
+                }
+            }
+        
+        }
+    }
+})
 def histories():
     connection = db_conn()
     try:
@@ -290,9 +461,122 @@ def histories():
                 
                 return jsonify({"histories": histories_list}), 200
     except Exception as e:
-        return jsonify({"error": "Error retrieving histories. " + str(e)}), 500
+        return jsonify({"error": "Error retrieving chat histories. " + str(e)}), 500
 
 @app.route("/conversation", methods=["POST"])
+@swag_from({
+    "tags": ["AI Chatbot"],
+    "summary": "Conversation with Bot",
+    "parameters": [
+        {
+            "name": "body",
+            "in": "body",
+            "required": True,
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "messages": {
+                        "type": "array",
+                        "description": "A list of messages exchanged during the conversation.",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "role": {
+                                    "type": "string",
+                                    "enum": ["user", "assistant"],
+                                    "description": "The role of the message sender. Can either be 'user' or 'assistant'."
+                                },
+                                "content": {
+                                    "type": "string",
+                                    "description": "The content of the message, which can include any text."
+                                }
+                            },
+                            "required": ["role", "content"]
+                        }
+                    }
+                },
+                "required": ["messages", "title"]
+            }
+        }
+    ],
+    "responses": {
+        "200": {
+            "description": "Success",
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "description": "The unique ID of the chat completion."
+                    },
+                    "created": {
+                        "type": "integer",
+                        "description": "Timestamp when the conversation was created."
+                    },
+                   "model": {
+                        "type": "string",
+                        "description": "The model used for the chat."
+                    },
+                    "object": {
+                        "type": "string",
+                        "description": "The type of the object (e.g., 'chat.completion')."
+                    },
+                    "choices": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "messages": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "role": {
+                                                "type": "string",
+                                                "enum": ["user", "assistant"],
+                                                "description": "The role of the message sender."
+                                            },
+                                            "content": {
+                                                "type": "string",
+                                                "description": "The content of the message."
+                                            }
+                                        },
+                                        "required": ["role", "content"]
+                                    },
+                                    "description": "A list of messages in the chat response."
+                                }
+                            }
+                        },
+                    }
+                }
+            }
+        },
+        "400": {
+            "description": "Bad Request",
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "error": {"type": "string"}
+                },
+                "example": {
+                    "error": "Invalid request body. 'messages' field is required."
+                }
+            }
+        },
+        "500": {
+            "description": "Internal Server Error",
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "error": {"type": "string"}
+                },
+                "example": {
+                    "error": "API key is not set. Please check your environment variables."
+                }
+            }
+        }
+    }
+})
 def conversation():
     api_key = os.environ.get("API_KEY")
     if not api_key:
