@@ -13,12 +13,13 @@ initializeIcons();
 
 export default function App() {
     const [title, setTitle] = useState<string>("");
+    const [historyId, setHistoryId] = useState<string>("");
 
     return (
         <BrowserRouter>
             <Routes>
-                <Route path="/" element={<Layout title={title} />}>
-                    <Route index element={<Chat setTitle={setTitle} />} />
+                <Route path="/" element={<Layout title={title} historyId={historyId} />}>
+                    <Route index element={<Chat title={title} setTitle={setTitle} setHistoryId={setHistoryId} />} />
                     <Route path="*" element={<NoPage />} />
                 </Route>
             </Routes>

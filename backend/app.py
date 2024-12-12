@@ -88,7 +88,6 @@ def initialize():
     }
 })
 def create_history():
-
     data = request.get_json()
     if not data or 'messages' not in data:
         return jsonify({"error": "Invalid request body. 'messages' field is required."}), 400
@@ -100,7 +99,6 @@ def create_history():
     try:
         with connection:
             with connection.cursor() as cursor:
-                cursor.execute("BEGIN")
                 cursor.execute("INSERT INTO history (title) VALUES (%s) RETURNING id", (title,))
                 history_id = cursor.fetchone()[0]
                 
@@ -166,6 +164,18 @@ def create_history():
                 }
             }
         },
+        "404": {
+            "description": "Not Found",
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "error": {"type": "string"}
+                },
+                "example": {
+                    "error": "Chat history with ID 123 not found"
+                }
+            }
+        },
         "500": {
             "description": "Internal Server Error",
             "schema": {
@@ -192,13 +202,18 @@ def update_history(id):
     try:
         with connection:
             with connection.cursor() as cursor:
-                cursor.execute("BEGIN")
+                cursor.execute(
+                    "SELECT 1 FROM history WHERE id = %s AND deleted_at IS NULL", 
+                    (id,)
+                )
+                if cursor.fetchone() is None:
+                    return jsonify({"error": f"Chat history with ID {id} not found."}), 404
+
                 if 'title' in data:
                     title = data['title']
                     cursor.execute("UPDATE history SET title = %s, updated_at=CURRENT_TIMESTAMP WHERE id = %s", (title, id))
-
-                cursor.execute("DELETE FROM messages WHERE history_id = %s", (id,))
                 
+                cursor.execute("DELETE FROM messages WHERE history_id = %s", (id,))
                 message_values = [(msg['role'], msg['content'], id) for msg in messages]
                 cursor.executemany(
                     "INSERT INTO messages (role, content, history_id) VALUES (%s, %s, %s)", 
@@ -216,12 +231,15 @@ def history(id):
     try:
         with connection:
             with connection.cursor() as cursor:
+                cursor.execute("SELECT title, created_at, updated_at, deleted_at FROM history WHERE id = %s AND deleted_at IS NULL", (id,))
+                history_data = cursor.fetchone()
+                if not history_data:
+                    return jsonify({"message": f"Chat history with ID {id} not found."}), 404
+            
                 cursor.execute("SELECT role, content FROM messages WHERE history_id = %s", (id,))
                 messages = cursor.fetchall()
                 messages_list = [{'role': row[0], 'content': row[1]} for row in messages]
                 
-                cursor.execute("SELECT title, created_at, updated_at, deleted_at FROM history WHERE id = %s", (id,))
-                history_data = cursor.fetchone()
                 
                 return jsonify({
                     "title": history_data[0],
@@ -235,16 +253,22 @@ def history(id):
     
 @app.route("/delete-history/<int:id>", methods=["DELETE"])
 def delete_history(id):
-    
     connection = db_conn()
     try:
         with connection:
             with connection.cursor() as cursor:
+                cursor.execute(
+                    "SELECT 1 FROM history WHERE id = %s AND deleted_at IS NULL", 
+                    (id,)
+                )
+                if cursor.fetchone() is None:
+                    return jsonify({"error": f"Chat history with ID {id} not found."}), 404
+
                 cursor.execute("UPDATE history SET deleted_at=CURRENT_TIMESTAMP WHERE id = %s", (id,))
                 
                 return jsonify({"message": "History is deleted successfully", "history_id": id}), 200
     except Exception as e:
-        return jsonify({"error": "Error deleting history. " + str(e)}), 500
+        return jsonify({"error": "Error deleting chat history. " + str(e)}), 500
 
 @app.route("/histories", methods=["GET"])
 def histories():

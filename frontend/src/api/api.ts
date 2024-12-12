@@ -30,6 +30,26 @@ export async function historyApi(id: string): Promise<any> {
 
         const responseData = await response.json();
 
+        if (response.ok || response.status === 404) {
+            return responseData;
+        }
+    } catch (error: any) {
+        throw new Error(error.message);
+    }
+}
+
+export async function deleteHistoryApi(id: string): Promise<any> {
+    try {
+        const response = await fetch(BASE_URL + "/delete-history/" + id, {
+            method: "DELETE",
+            headers: {
+                "Content-Type": "application/json",
+                "Access-Control-Allow-Origin": "*",
+            }
+        });
+
+        const responseData = await response.json();
+
         if (response.ok) {
             return responseData;
         }
@@ -58,7 +78,7 @@ export async function historyListApi(): Promise<any> {
     }
 }
 
-export async function saveChatApi(options: { messages: ChatMessage[]; title: string }): Promise<any> {
+export async function saveHistoryApi(options: { messages: ChatMessage[]; title: string }): Promise<any> {
     const response = await fetch(BASE_URL + "/create-history", {
         method: "POST",
         headers: {
@@ -80,7 +100,7 @@ export async function saveChatApi(options: { messages: ChatMessage[]; title: str
     return responseData;
 }
 
-export async function updateChatApi(id: string, options: { messages: ChatMessage[]; title?: string }): Promise<any> {
+export async function updateHistoryApi(id: string, options: { messages: ChatMessage[]; title?: string }): Promise<any> {
     const bodyData: any = {
         messages: options.messages,
     };

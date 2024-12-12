@@ -5,7 +5,9 @@ export type AskResponse = {
 
 export type ChatHistory = {
     id: string;
-    title?: string;
+    title: string;
+    created_at: string;
+    updated_at: string;
 };
 
 export type ChatMessage = {

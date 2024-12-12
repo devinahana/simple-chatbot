@@ -2,24 +2,31 @@ import { Outlet, Link } from "react-router-dom";
 import styles from "./Layout.module.css";
 import BotIcon from "../../assets/bot-icon.png";
 import { History32Regular } from "@fluentui/react-icons";
-import { Dialog, Stack, Link as FluentLink, Text } from "@fluentui/react";
+import { Dialog, Stack, Link as FluentLink, Text, IconButton, DefaultButton, PrimaryButton, DialogFooter, MessageBar, MessageBarType } from "@fluentui/react";
 import { useState } from "react";
 import { ChatHistory } from "../../api";
-import { historyListApi } from "../../api";
+import { historyListApi, deleteHistoryApi } from "../../api";
 import { useNavigate } from 'react-router-dom';
 import { ClipLoader } from 'react-spinners';
+import { format } from 'date-fns';
 
 interface LayoutProps {
     title: string;
+    historyId: string;
 }
 
-const Layout: React.FC<LayoutProps> = ({ title }) => {
+const Layout: React.FC<LayoutProps> = ({ title, historyId }) => {
     const navigate = useNavigate();
     const [isSharePanelOpen, setIsSharePanelOpen] = useState<boolean>(false);
     const [chatHistory, setChatHistory] = useState<ChatHistory[]>([]);
     const [isLoadingHistory, setIsLoadingHistory] = useState<boolean>(true);
+    const [isDeleting, setIsDeleting] = useState<boolean>(false);
+    const [historyToDelete, setHistoryToDelete] = useState<ChatHistory | null>(null);
+    const [alertMessage, setAlertMessage] = useState<string | null>(null);
+    const [alertType, setAlertType] = useState<MessageBarType | undefined>(undefined);
 
-    const handleClick = () => {
+
+    const navigateToHome = () => {
         window.location.href = '/';
     };
 
@@ -46,7 +53,41 @@ const Layout: React.FC<LayoutProps> = ({ title }) => {
 
     const handlePanelDismiss = () => {
         setIsSharePanelOpen(false);
+        cancelDelete()
     };
+
+    const handleDeleteHistory = (history: ChatHistory) => {
+        setHistoryToDelete(history);
+        setIsDeleting(true);
+    };
+
+    const confirmDelete = async () => {
+        if (historyToDelete) {
+            try {
+                await deleteHistoryApi(historyToDelete.id); // Ensure this returns a promise
+                setAlertMessage(`Chat history "${historyToDelete?.title}" deleted successfully.`);
+                setAlertType(MessageBarType.success);
+
+                if (historyId == historyToDelete.id) {
+                    setTimeout(() => {
+                        navigateToHome();
+                    }, 2500);
+                }
+            } catch (error) {
+                setAlertMessage(`Failed to delete chat history "${historyToDelete?.title}". Please try again.`);
+                setAlertType(MessageBarType.error);
+            } finally {
+                setIsDeleting(false);
+                setIsSharePanelOpen(false);
+            }
+        }
+    };
+
+    const cancelDelete = () => {
+        setIsDeleting(false);
+        setHistoryToDelete(null);
+    };
+
 
     const handleHistoryClick = (id: string) => {
         setIsSharePanelOpen(false)
@@ -58,7 +99,7 @@ const Layout: React.FC<LayoutProps> = ({ title }) => {
         <div className={styles.layout}>
             <header className={styles.header} role={"banner"}>
                 <div className={styles.headerContainer}>
-                    <div onClick={handleClick} className={styles.headerTitleContainer}>
+                    <div onClick={navigateToHome} className={styles.headerTitleContainer}>
                         <img
                             src={BotIcon}
                             className={styles.headerIcon}
@@ -118,24 +159,107 @@ const Layout: React.FC<LayoutProps> = ({ title }) => {
                     </div>
                 ) : (
                     <>
-                        <Stack>
-                            {chatHistory.length > 0 ? (
-                                chatHistory.map(({ id, title }) => (
-                                    <FluentLink
-                                        key={id}
-                                        onClick={() => handleHistoryClick(id)}
-                                        style={{ display: 'block', padding: '8px', cursor: 'pointer' }}
-                                    >
-                                        <Text>{title}</Text>
-                                    </FluentLink>
-                                ))
-                            ) : (
-                                <Text>No chat history available</Text>
-                            )}
-                        </Stack>
+                        {isDeleting ? (
+                            <Stack tokens={{ childrenGap: 10 }}>
+                                <Text
+                                    styles={{ root: { marginBottom: '24px' } }}
+                                >Are you sure you want to delete the chat history "{historyToDelete?.title}"?</Text>
+                                <DialogFooter>
+                                    <DefaultButton onClick={cancelDelete} text="Cancel" />
+                                    <PrimaryButton onClick={confirmDelete} text="Delete" styles={{
+                                        root: {
+                                            backgroundColor: 'red',
+                                            borderColor: 'red',
+                                        },
+                                        rootHovered: {
+                                            backgroundColor: 'darkred', // darker shade for hover
+                                            borderColor: 'darkred',    // optional: darker border on hover
+                                        },
+                                    }} />
+                                </DialogFooter>
+                            </Stack>
+                        ) : (
+                            <Stack>
+                                {chatHistory.length > 0 ? (
+                                    chatHistory.map((history) => (
+                                        <Stack
+                                            key={history.id}
+                                            horizontal
+                                            verticalAlign="center"
+                                            tokens={{ childrenGap: 10 }}
+                                            style={{ marginBottom: '12px', display: 'flex', alignItems: 'stretch' }}
+                                        >
+                                            <FluentLink
+                                                onClick={() => handleHistoryClick(history.id)}
+                                                style={{ display: 'block', padding: '8px', cursor: 'pointer', flex: 1 }}
+                                            >
+                                                <Stack tokens={{ childrenGap: 4 }}>
+                                                    <Text>{history.title}</Text>
+                                                    {history.updated_at && (
+                                                        <Text variant="xSmall" style={{ color: '#888' }}>
+                                                            {format(new Date(history.updated_at), 'MM/dd/yyyy, hh:mm a')}
+                                                        </Text>
+                                                    )}
+                                                </Stack>
+                                            </FluentLink>
+                                            <IconButton
+                                                iconProps={{ iconName: 'Delete' }}
+                                                title="Delete"
+                                                onClick={() => handleDeleteHistory(history)}
+                                                styles={{
+                                                    root: {
+                                                        alignSelf: 'center',
+                                                        padding: '8px',
+                                                    },
+                                                    icon: {
+                                                        color: '#888',
+                                                    }
+                                                }}
+                                            />
+                                        </Stack>
+                                    ))
+                                ) : (
+                                    <Text>No chat history available</Text>
+                                )}
+                            </Stack>
+                        )}
                     </>
                 )}
             </Dialog>
+
+            {alertMessage && (
+                <div
+                    style={{
+                        position: "fixed",
+                        top: "32px",
+                        left: "50%",
+                        transform: "translateX(-50%)",
+                        zIndex: 1000,
+                        width: "90%",
+                        maxWidth: "400px",
+                    }}
+                >
+                    <MessageBar
+                        messageBarType={alertType}
+                        isMultiline={true}
+                        onDismiss={() => setAlertMessage(null)}
+                        dismissButtonAriaLabel="Close"
+                        styles={{
+                            root: {
+                                padding: "12px", 
+                                border: "1px solid lightgray",
+                                borderRadius: "8px"
+                            },
+                            text: {
+                                fontSize: "14px", 
+                            },
+                        }}
+                    >
+                        {alertMessage}
+                    </MessageBar>
+                </div>
+            )}
+
         </div>
     );
 };

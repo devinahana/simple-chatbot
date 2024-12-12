@@ -11,17 +11,19 @@ import {
     conversationApi,
     ChatResponse,
     historyApi,
-    saveChatApi,
-    updateChatApi
+    saveHistoryApi,
+    updateHistoryApi
 } from "../../api";
 import { Answer } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
 
 interface ChatProps {
+    title: string;
     setTitle: React.Dispatch<React.SetStateAction<string>>;
+    setHistoryId: React.Dispatch<React.SetStateAction<string>>;
 }
 
-const Chat: React.FC<ChatProps> = ({ setTitle }) => {
+const Chat: React.FC<ChatProps> = ({ title, setTitle, setHistoryId }) => {
     const queryParameters = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
     const id = queryParameters?.get("id") as string;
     const [isLoadingInitial, setIsLoadingInitial] = useState<boolean>(true);
@@ -37,11 +39,12 @@ const Chat: React.FC<ChatProps> = ({ setTitle }) => {
         const initializeAnswers = async () => {
             try {
                 const data = await historyApi(id);
-                if (data) {
+                if ('messages' in data) {
                     setAnswers(data.messages);
                     setTitle(data.title);
-                } else {
-                    setAnswers([]);
+                    setHistoryId(id);
+                } else if ('message' in data) {
+                    navigateToHome();
                 }
             } catch (error) {
                 console.error("Failed to fetch data. " + error);
@@ -58,6 +61,9 @@ const Chat: React.FC<ChatProps> = ({ setTitle }) => {
 
     }, []);
 
+    const navigateToHome = () => {
+        window.location.href = '/';
+    };
 
     const makeApiRequest = async (question: string) => {
         lastQuestionRef.current = question;
@@ -132,7 +138,7 @@ const Chat: React.FC<ChatProps> = ({ setTitle }) => {
     const saveChat = async (title: string) => {
         try {
             if (id) {
-                const response = await updateChatApi(
+                const response = await updateHistoryApi(
                     id,
                     {
                         messages: answers, // Use the current state as the messages
@@ -140,7 +146,7 @@ const Chat: React.FC<ChatProps> = ({ setTitle }) => {
                     }
                 );
             } else {
-                const response = await saveChatApi(
+                const response = await saveHistoryApi(
                     {
                         messages: answers, // Use the current state as the messages
                         title: title
@@ -265,7 +271,7 @@ const Chat: React.FC<ChatProps> = ({ setTitle }) => {
                                     <div
                                         role="button"
                                         tabIndex={0}
-                                        onClick={handlePanelClick}
+                                        onClick={isLoading || answers.length === 0 ? undefined : handlePanelClick}
                                         aria-label="Save session"
                                     >
                                         <SaveRegular
@@ -280,7 +286,7 @@ const Chat: React.FC<ChatProps> = ({ setTitle }) => {
                                     <div
                                         role="button"
                                         tabIndex={0}
-                                        onClick={clearChat}
+                                        onClick={isLoading || answers.length === 0 ? undefined : clearChat}
                                         aria-label="Clear session"
                                     >
                                         <BroomRegular
@@ -328,6 +334,7 @@ const Chat: React.FC<ChatProps> = ({ setTitle }) => {
                                 <TextField
                                     componentRef={textFieldRef}
                                     placeholder="Enter title here"
+                                    value={title || ''}
                                     styles={{ root: { marginBottom: '24px' } }}
                                 />
                                 <DialogFooter>
