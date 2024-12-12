@@ -2,12 +2,10 @@ import React, { useState } from "react";
 import ReactDOM from "react-dom/client";
 import { Routes, Route, BrowserRouter } from "react-router-dom";
 import { initializeIcons } from "@fluentui/react";
-
-import "./index.css";
-
 import Layout from "./pages/layout/Layout";
 import NoPage from "./pages/NoPage";
 import Chat from "./pages/chat/Chat";
+import "./index.css";
 
 initializeIcons();
 

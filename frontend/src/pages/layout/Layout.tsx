@@ -1,4 +1,4 @@
-import { Outlet, Link } from "react-router-dom";
+import { Outlet } from "react-router-dom";
 import styles from "./Layout.module.css";
 import BotIcon from "../../assets/bot-icon.png";
 import { History32Regular } from "@fluentui/react-icons";
