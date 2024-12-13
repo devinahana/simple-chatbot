@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect, createRef } from "react";
-import { DefaultButton, Dialog, DialogFooter, PrimaryButton, Stack, TextField, MessageBarType } from "@fluentui/react";
+import { DefaultButton, Dialog, DialogFooter, PrimaryButton, Stack, TextField } from "@fluentui/react";
 import { BroomRegular, SquareRegular, ErrorCircleRegular, SaveRegular } from "@fluentui/react-icons";
 import { ClipLoader } from 'react-spinners';
 import styles from "./Chat.module.css";
@@ -20,14 +20,10 @@ import { QuestionInput } from "../../components/QuestionInput";
 interface ChatProps {
     title: string;
     setTitle: React.Dispatch<React.SetStateAction<string>>;
-    setHistoryId: React.Dispatch<React.SetStateAction<string>>;
-    alertMessage: string | null;
-    setAlertMessage: React.Dispatch<React.SetStateAction<string | null>>;
-    alertType: MessageBarType | undefined;
-    setAlertType: React.Dispatch<React.SetStateAction<MessageBarType | undefined>>;
+    setHistoryId: React.Dispatch<React.SetStateAction<string>>;z
 }
 
-const Chat: React.FC<ChatProps> = ({ title, setTitle, setHistoryId, alertMessage, setAlertMessage, alertType, setAlertType }) => {
+const Chat: React.FC<ChatProps> = ({ title, setTitle, setHistoryId }) => {
     const queryParameters = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
     const id = queryParameters?.get("id") as string;
     const [isLoadingInitial, setIsLoadingInitial] = useState<boolean>(true);
@@ -157,16 +153,8 @@ const Chat: React.FC<ChatProps> = ({ title, setTitle, setHistoryId, alertMessage
                     }
                 );
             }
-            setAlertMessage(`Chat history "${title}" saved successfully.`);
-            setAlertType(MessageBarType.success);
         } catch (error) {
             console.error('Error saving chat:', error);
-            setAlertMessage(`Failed to save chat history "${title}". Please try again.`);
-            setAlertType(MessageBarType.error);
-        } finally {
-            setTimeout(() => {
-                setAlertMessage(null);
-            }, 3000);
         }
     };
 
@@ -347,7 +335,6 @@ const Chat: React.FC<ChatProps> = ({ title, setTitle, setHistoryId, alertMessage
                                     componentRef={textFieldRef}
                                     placeholder="Enter title here"
                                     value={title || ''}
-                                    onChange={(e, newValue) => setTitle(newValue || '')}
                                     styles={{ root: { marginBottom: '24px' } }}
                                 />
                                 <DialogFooter>
