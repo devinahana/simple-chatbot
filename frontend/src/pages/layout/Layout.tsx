@@ -13,18 +13,18 @@ import { format } from 'date-fns';
 interface LayoutProps {
     title: string;
     historyId: string;
+    alertMessage: string|null;
+    setAlertMessage: React.Dispatch<React.SetStateAction<string|null>>;
+    alertType: MessageBarType|undefined;
+    setAlertType: React.Dispatch<React.SetStateAction<MessageBarType|undefined>>;
 }
-
-const Layout: React.FC<LayoutProps> = ({ title, historyId }) => {
+const Layout: React.FC<LayoutProps> = ({ title, historyId, alertMessage, setAlertMessage, alertType, setAlertType }) => {
     const navigate = useNavigate();
     const [isSharePanelOpen, setIsSharePanelOpen] = useState<boolean>(false);
     const [chatHistory, setChatHistory] = useState<ChatHistory[]>([]);
     const [isLoadingHistory, setIsLoadingHistory] = useState<boolean>(true);
     const [isDeleting, setIsDeleting] = useState<boolean>(false);
     const [historyToDelete, setHistoryToDelete] = useState<ChatHistory | null>(null);
-    const [alertMessage, setAlertMessage] = useState<string | null>(null);
-    const [alertType, setAlertType] = useState<MessageBarType | undefined>(undefined);
-
 
     const navigateToHome = () => {
         window.location.href = '/';
@@ -79,6 +79,9 @@ const Layout: React.FC<LayoutProps> = ({ title, historyId }) => {
             } finally {
                 setIsDeleting(false);
                 setIsSharePanelOpen(false);
+                setTimeout(() => {
+                    setAlertMessage(null);
+                }, 3000);
             }
         }
     };
