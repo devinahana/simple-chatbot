@@ -57,7 +57,8 @@ def initialize():
                 "type": "object",
                 "properties": {
                     "history_id": {"type": "integer"},
-                    "message": {"type": "string"}
+                    "message": {"type": "string"},
+                    "title": {"type": "string"}
                 }
             }
         },
@@ -108,7 +109,10 @@ def create_history():
                     message_values
                 )
 
-        return jsonify({"message": "Chat history created successfully", "history_id": history_id}), 201
+        return jsonify({
+                "message": "Chat history created successfully", 
+                "history_id": history_id,
+                "title": title}), 201
     except Exception as e:
         connection.rollback()
         return jsonify({"error": "Error creating chat history. " + str(e)}), 500
@@ -158,7 +162,8 @@ def create_history():
                 "type": "object",
                 "properties": {
                     "history_id": {"type": "integer"},
-                    "message": {"type": "string"}
+                    "message": {"type": "string"},
+                    "title": {"type": "string"},
                 }
             }
         },
@@ -213,14 +218,17 @@ def update_history(id):
         with connection:
             with connection.cursor() as cursor:
                 cursor.execute(
-                    "SELECT 1 FROM history WHERE id = %s AND deleted_at IS NULL", 
+                    "SELECT id, title FROM history WHERE id = %s AND deleted_at IS NULL", 
                     (id,)
                 )
-                if cursor.fetchone() is None:
+                existing_history = cursor.fetchone()
+                if existing_history is None:
                     return jsonify({"error": f"Chat history with ID {id} not found."}), 404
 
+                response_title = existing_history[1]
                 if 'title' in data:
                     title = data['title']
+                    response_title = title
                     cursor.execute("UPDATE history SET title = %s, updated_at=CURRENT_TIMESTAMP WHERE id = %s", (title, id))
                 
                 cursor.execute("DELETE FROM messages WHERE history_id = %s", (id,))
@@ -229,7 +237,9 @@ def update_history(id):
                     "INSERT INTO messages (role, content, history_id) VALUES (%s, %s, %s)", 
                     message_values
                 )
-        return jsonify({"message": "Chat history updated successfully", "history_id": id}), 200
+        return jsonify({"message": "Chat history updated successfully", 
+                        "history_id": id,
+                        "title": response_title}), 200
     except Exception as e:
         connection.rollback()
         return jsonify({"error": "Error updating chat history. " + str(e)}), 500

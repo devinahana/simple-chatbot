@@ -12,23 +12,32 @@ import { format } from 'date-fns';
 
 interface LayoutProps {
     title: string;
+    setTitle: React.Dispatch<React.SetStateAction<string>>;
     historyId: string;
+    setHistoryId: React.Dispatch<React.SetStateAction<string>>;
     alertMessage: string|null;
     setAlertMessage: React.Dispatch<React.SetStateAction<string|null>>;
     alertType: MessageBarType|undefined;
     setAlertType: React.Dispatch<React.SetStateAction<MessageBarType|undefined>>;
+    resetChat: () => void;
 }
-const Layout: React.FC<LayoutProps> = ({ title, historyId, alertMessage, setAlertMessage, alertType, setAlertType }) => {
+const Layout: React.FC<LayoutProps> = ({ 
+        title, 
+        setTitle,
+        historyId, 
+        setHistoryId, 
+        alertMessage, 
+        setAlertMessage, 
+        alertType, 
+        setAlertType,
+        resetChat
+    }) => {
     const navigate = useNavigate();
     const [isSharePanelOpen, setIsSharePanelOpen] = useState<boolean>(false);
     const [chatHistory, setChatHistory] = useState<ChatHistory[]>([]);
     const [isLoadingHistory, setIsLoadingHistory] = useState<boolean>(true);
     const [isDeleting, setIsDeleting] = useState<boolean>(false);
     const [historyToDelete, setHistoryToDelete] = useState<ChatHistory | null>(null);
-
-    const navigateToHome = () => {
-        window.location.href = '/';
-    };
 
     const fetchHistoryList = async () => {
         setIsLoadingHistory(true)
@@ -64,14 +73,12 @@ const Layout: React.FC<LayoutProps> = ({ title, historyId, alertMessage, setAler
     const confirmDelete = async () => {
         if (historyToDelete) {
             try {
-                await deleteHistoryApi(historyToDelete.id); // Ensure this returns a promise
+                await deleteHistoryApi(historyToDelete.id);
                 setAlertMessage(`Chat history "${historyToDelete?.title}" deleted successfully.`);
                 setAlertType(MessageBarType.success);
 
                 if (historyId == historyToDelete.id) {
-                    setTimeout(() => {
-                        navigateToHome();
-                    }, 2500);
+                    resetChat();
                 }
             } catch (error) {
                 setAlertMessage(`Failed to delete chat history "${historyToDelete?.title}". Please try again.`);
@@ -93,16 +100,15 @@ const Layout: React.FC<LayoutProps> = ({ title, historyId, alertMessage, setAler
 
 
     const handleHistoryClick = (id: string) => {
-        setIsSharePanelOpen(false)
-        navigate(`${location.pathname}`, { replace: true });
-        document.location.search += `&id=${id}`;
+        setIsSharePanelOpen(false);
+        setHistoryId(id);
     };
 
     return (
         <div className={styles.layout}>
             <header className={styles.header} role={"banner"}>
                 <div className={styles.headerContainer}>
-                    <div onClick={navigateToHome} className={styles.headerTitleContainer}>
+                    <div onClick={resetChat} className={styles.headerTitleContainer}>
                         <img
                             src={BotIcon}
                             className={styles.headerIcon}
@@ -175,8 +181,8 @@ const Layout: React.FC<LayoutProps> = ({ title, historyId, alertMessage, setAler
                                             borderColor: 'red',
                                         },
                                         rootHovered: {
-                                            backgroundColor: 'darkred', // darker shade for hover
-                                            borderColor: 'darkred',    // optional: darker border on hover
+                                            backgroundColor: 'darkred',
+                                            borderColor: 'darkred', 
                                         },
                                     }} />
                                 </DialogFooter>

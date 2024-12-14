@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect, createRef } from "react";
-import { DefaultButton, Dialog, DialogFooter, PrimaryButton, Stack, TextField } from "@fluentui/react";
+import { DefaultButton, Dialog, DialogFooter, PrimaryButton, Stack, TextField, MessageBarType } from "@fluentui/react";
 import { BroomRegular, SquareRegular, ErrorCircleRegular, SaveRegular } from "@fluentui/react-icons";
 import { ClipLoader } from 'react-spinners';
 import styles from "./Chat.module.css";
@@ -20,50 +20,66 @@ import { QuestionInput } from "../../components/QuestionInput";
 interface ChatProps {
     title: string;
     setTitle: React.Dispatch<React.SetStateAction<string>>;
-    setHistoryId: React.Dispatch<React.SetStateAction<string>>;z
+    historyId: string;
+    setHistoryId: React.Dispatch<React.SetStateAction<string>>;
+    setAlertMessage: React.Dispatch<React.SetStateAction<string | null>>;
+    setAlertType: React.Dispatch<React.SetStateAction<MessageBarType | undefined>>;
+    lastQuestionRef: React.MutableRefObject<string>;
+    answers: ChatMessage[];
+    setAnswers: React.Dispatch<React.SetStateAction<ChatMessage[]>>;
+    inputValue: string;
+    setInputValue: React.Dispatch<React.SetStateAction<string>>;
+    clearChat: () => void;
+    resetChat: () => void;
 }
 
-const Chat: React.FC<ChatProps> = ({ title, setTitle, setHistoryId }) => {
-    const queryParameters = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
-    const id = queryParameters?.get("id") as string;
+const Chat: React.FC<ChatProps> = ({ 
+        title, 
+        setTitle, 
+        historyId, 
+        setHistoryId, 
+        setAlertMessage, 
+        setAlertType,
+        lastQuestionRef,
+        answers,
+        setAnswers,
+        inputValue,
+        setInputValue,
+        clearChat,
+        resetChat, 
+    }) => {
     const [isLoadingInitial, setIsLoadingInitial] = useState<boolean>(true);
     const [isSharePanelOpen, setIsSharePanelOpen] = useState<boolean>(false);
-    const lastQuestionRef = useRef<string>("");
     const chatMessageStreamEnd = useRef<HTMLDivElement | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [showLoadingMessage, setShowLoadingMessage] = useState<boolean>(false);
-    const [answers, setAnswers] = useState<ChatMessage[]>([]);
     const abortFuncs = useRef([] as AbortController[]);
 
     useEffect(() => {
         const initializeAnswers = async () => {
             try {
-                const data = await historyApi(id);
+                const data = await historyApi(historyId);
                 if ('messages' in data) {
                     setAnswers(data.messages);
                     setTitle(data.title);
-                    setHistoryId(id);
+                    setInputValue(data.title);
                 } else if ('message' in data) {
-                    navigateToHome();
+                    resetChat();
                 }
             } catch (error) {
                 console.error("Failed to fetch data. " + error);
             } finally {
-                setIsLoadingInitial(false)
+                setIsLoadingInitial(false);
             }
         };
 
-        if (id) {
+        if (historyId) {
             initializeAnswers();
         } else {
             setIsLoadingInitial(false);
         }
 
-    }, []);
-
-    const navigateToHome = () => {
-        window.location.href = '/';
-    };
+    }, [historyId]);
 
     const makeApiRequest = async (question: string) => {
         lastQuestionRef.current = question;
@@ -135,32 +151,41 @@ const Chat: React.FC<ChatProps> = ({ title, setTitle, setHistoryId }) => {
         return abortController.abort();
     };
 
-    const saveChat = async (title: string) => {
+    const saveChat = async (titleInput: string) => {
         try {
-            if (id) {
-                const response = await updateHistoryApi(
-                    id,
+            let response;
+            if (historyId) {
+                response = await updateHistoryApi(
+                    historyId,
                     {
                         messages: answers, // Use the current state as the messages
-                        title: title
+                        title: titleInput
                     }
                 );
             } else {
-                const response = await saveHistoryApi(
+                response = await saveHistoryApi(
                     {
                         messages: answers, // Use the current state as the messages
-                        title: title
+                        title: titleInput
                     }
                 );
+                setHistoryId(response.history_id);
             }
+            setAlertMessage(`Chat history "${response.title}" saved successfully.`);
+            setAlertType(MessageBarType.success);
+            setTitle(response.title);
         } catch (error) {
             console.error('Error saving chat:', error);
+            setAlertMessage(`Failed to save chat history. Please try again.`);
+            setAlertType(MessageBarType.error);
+            setTimeout(() => {
+                setInputValue(title);
+            }, 300);
+        } finally {
+            setTimeout(() => {
+                setAlertMessage(null);
+            }, 3000);
         }
-    };
-
-    const clearChat = () => {
-        lastQuestionRef.current = "";
-        setAnswers([]);
     };
 
     const stopGenerating = () => {
@@ -176,19 +201,22 @@ const Chat: React.FC<ChatProps> = ({ title, setTitle, setHistoryId }) => {
     const textFieldRef = createRef<HTMLInputElement>();
     const handleSaveClick = () => {
         const title = textFieldRef.current?.value || '';
+        setIsSharePanelOpen(false);
         saveChat(title);
-        handlePanelDismiss();
     };
 
 
     const handlePanelDismiss = () => {
         setIsSharePanelOpen(false);
+        setTimeout(() => {
+            setInputValue(title);
+        }, 300);
     };
 
     useEffect(() => chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" }), [showLoadingMessage]);
 
     return (
-        <div className={styles.container} role="main" key={id}>
+        <div className={styles.container} role="main" key={historyId}>
             <Stack horizontal className={styles.chatRoot}>
                 <div className={styles.chatContainer}>
                     {isLoadingInitial ? (
@@ -334,7 +362,8 @@ const Chat: React.FC<ChatProps> = ({ title, setTitle, setHistoryId }) => {
                                 <TextField
                                     componentRef={textFieldRef}
                                     placeholder="Enter title here"
-                                    value={title || ''}
+                                    value={inputValue || ''}
+                                    onChange={(e, newValue) => setInputValue(newValue || '')}
                                     styles={{ root: { marginBottom: '24px' } }}
                                 />
                                 <DialogFooter>
